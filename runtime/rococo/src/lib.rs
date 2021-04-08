@@ -78,6 +78,7 @@ use runtime_parachains::hrmp as parachains_hrmp;
 use runtime_parachains::scheduler as parachains_scheduler;
 
 pub use pallet_balances::Call as BalancesCall;
+pub use pallet_bridge_grandpa::Call as BridgeGrandpaWestendCall;
 
 use polkadot_parachain::primitives::Id as ParaId;
 use xcm::v0::{MultiLocation, NetworkId};

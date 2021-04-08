@@ -107,10 +107,16 @@ macro_rules! select_bridge {
 				type Target = relay_rococo_client::Rococo;
 
 				fn encode_init_bridge(
-					_init_data: InitializationData<<Source as ChainBase>::Header>,
+					init_data: InitializationData<<Source as ChainBase>::Header>,
 				) -> <Target as Chain>::Call {
 					// TODO: Maybe more closely match "real" Call
-					bp_rococo::Call::initialize
+					// bp_rococo::Call::initialize
+
+					rococo_runtime::BridgeGrandpaWestendCall::<
+						rococo_runtime::Runtime,
+						rococo_runtime::WestendGrandpaInstance,
+					>::initialize(init_data)
+					.into()
 				}
 
 				$generic
@@ -120,10 +126,16 @@ macro_rules! select_bridge {
 				type Target = relay_westend_client::Westend;
 
 				fn encode_init_bridge(
-					_init_data: InitializationData<<Source as ChainBase>::Header>,
+					init_data: InitializationData<<Source as ChainBase>::Header>,
 				) -> <Target as Chain>::Call {
 					// TODO: Maybe more closely match "real" Call
-					bp_westend::Call::initialize
+					// bp_westend::Call::initialize
+
+					westend_runtime::BridgeGrandpaRococoCall::<
+						westned_runtime::Runtime,
+						westned_runtime::RococoGrandpaInstance,
+					>::initialize(init_data)
+					.into()
 				}
 
 				$generic
