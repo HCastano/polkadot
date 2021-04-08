@@ -217,6 +217,23 @@ impl frame_support::traits::OnRuntimeUpgrade for UpgradeSessionKeys {
 	}
 }
 
+parameter_types! {
+	// This is a pretty unscientific cap.
+	//
+	// Note that once this is hit the pallet will essentially throttle incoming requests down to one
+	// call per block.
+	pub const MaxRequests: u32 = 50;
+}
+
+pub type WestendGrandpaInstance = ();
+impl pallet_bridge_grandpa::Config for Runtime {
+	type BridgedChain = bp_westend::Westend;
+	type MaxRequests = MaxRequests;
+
+	// TODO [#391]: Use weights generated for the Rococo runtime instead of Rialto ones.
+	type WeightInfo = pallet_bridge_grandpa::weights::RialtoWeight<Runtime>;
+}
+
 construct_runtime! {
 	pub enum Runtime where
 		Block = Block,
@@ -270,6 +287,7 @@ construct_runtime! {
 		Mmr: pallet_mmr::{Pallet, Call, Storage},
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage},
 		MmrLeaf: mmr_common::{Pallet, Storage},
+		BridgeWestendGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage},
 
 		// Validator Manager pallet.
 		ValidatorManager: validator_manager::{Pallet, Call, Storage, Event<T>},

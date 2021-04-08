@@ -65,6 +65,10 @@ xcm = { package = "xcm", path = "../../xcm", default-features = false }
 xcm-executor = { package = "xcm-executor", path = "../../xcm/xcm-executor", default-features = false }
 xcm-builder = { package = "xcm-builder", path = "../../xcm/xcm-builder", default-features = false }
 
+# Bridge Primitives
+pallet-bridge-grandpa = { path = "../../bridges/modules/grandpa", default-features = false }
+bp-westend= { path = "../../bridges/primitives/chain-westend", default-features = false }
+
 [build-dependencies]
 substrate-wasm-builder = "3.0.0"
 
@@ -74,11 +78,13 @@ no_std = []
 std = [
 	"authority-discovery-primitives/std",
 	"babe-primitives/std",
+    "bp-westend/std",
 	"parity-scale-codec/std",
 	"frame-executive/std",
 	"pallet-authority-discovery/std",
 	"pallet-authorship/std",
 	"pallet-babe/std",
+    "pallet-bridge-grandpa/std",
 	"beefy-primitives/std",
 	"pallet-balances/std",
 	"pallet-beefy/std",

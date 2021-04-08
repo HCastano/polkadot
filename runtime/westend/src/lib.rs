@@ -757,7 +757,6 @@ parameter_types! {
 	pub const MaxRequests: u32 = 50;
 }
 
-
 pub type RococoGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
 	type BridgedChain = bp_rococo::Rococo;
