@@ -4546,6 +4546,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-bridge-grandpa"
+version = "0.1.0"
+dependencies = [
+ "bp-header-chain",
+ "bp-runtime",
+ "bp-test-utils",
+ "finality-grandpa",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "num-traits",
+ "parity-scale-codec",
+ "serde",
+ "sp-finality-grandpa",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-trie",
+]
+
+[[package]]
 name = "pallet-collective"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate#97f1b639df330f8a8b966362e34e4b720e8d7a32"
@@ -11201,6 +11223,7 @@ version = "0.8.30"
 dependencies = [
  "beefy-primitives",
  "bitvec",
+ "bp-rococo",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -11216,6 +11239,7 @@ dependencies = [
  "pallet-babe",
  "pallet-balances",
  "pallet-beefy",
+ "pallet-bridge-grandpa",
  "pallet-collective",
  "pallet-democracy",
  "pallet-election-provider-multi-phase",

@@ -73,6 +73,7 @@ pub use pallet_staking::StakerStatus;
 pub use sp_runtime::BuildStorage;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
+pub use pallet_bridge_grandpa::Call as BridgeGrandpaRococoCall;
 
 /// Constant values used within the runtime.
 pub mod constants;
@@ -748,6 +749,24 @@ impl pallet_proxy::Config for Runtime {
 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
 }
 
+parameter_types! {
+	// This is a pretty unscientific cap.
+	//
+	// Note that once this is hit the pallet will essentially throttle incoming requests down to one
+	// call per block.
+	pub const MaxRequests: u32 = 50;
+}
+
+
+pub type RococoGrandpaInstance = ();
+impl pallet_bridge_grandpa::Config for Runtime {
+	type BridgedChain = bp_rococo::Rococo;
+	type MaxRequests = MaxRequests;
+
+	// TODO [#391]: Use weights generated for the Westend runtime instead of Rialto ones.
+	type WeightInfo = pallet_bridge_grandpa::weights::RialtoWeight<Runtime>;
+}
+
 construct_runtime! {
 	pub enum Runtime where
 		Block = Block,
@@ -807,6 +826,7 @@ construct_runtime! {
 		Mmr: pallet_mmr::{Pallet, Call, Storage} = 28,
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage} = 29,
 		MmrLeaf: mmr_common::{Pallet, Storage} = 30,
+		BridgeRococoGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage} = 31,
 	}
 }
 
