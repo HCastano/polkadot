@@ -39,16 +39,13 @@
 use crate::weights::WeightInfo;
 
 use bp_header_chain::justification::GrandpaJustification;
+use bp_header_chain::InitializationData;
 use bp_runtime::{BlockNumberOf, Chain, HashOf, HasherOf, HeaderOf};
-use codec::{Decode, Encode};
 use finality_grandpa::voter_set::VoterSet;
 use frame_support::ensure;
 use frame_system::{ensure_signed, RawOrigin};
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
 use sp_finality_grandpa::{ConsensusLog, GRANDPA_ENGINE_ID};
 use sp_runtime::traits::{BadOrigin, Header as HeaderT, Zero};
-use sp_runtime::RuntimeDebug;
 
 #[cfg(test)]
 mod mock;
@@ -90,6 +87,14 @@ pub mod pallet {
 		/// until the request count has decreased.
 		#[pallet::constant]
 		type MaxRequests: Get<u32>;
+
+		/// Maximal number of finalized headers to keep in the storage.
+		///
+		/// The setting is there to prevent growing the on-chain state indefinitely. Note
+		/// the setting does not relate to block numbers - we will simply keep as much items
+		/// in the storage, so it doesn't guarantee any fixed timeframe for finality headers.
+		#[pallet::constant]
+		type HeadersToKeep: Get<u32>;
 
 		/// Weights gathered through benchmarking.
 		type WeightInfo: WeightInfo;
@@ -153,9 +158,19 @@ pub mod pallet {
 			verify_justification::<T, I>(&justification, hash, *number, authority_set)?;
 
 			let _enacted = try_enact_authority_change::<T, I>(&finality_target, set_id)?;
+			let index = <ImportedHashesPointer<T, I>>::get();
+			let pruning = <ImportedHashes<T, I>>::try_get(index);
 			<BestFinalized<T, I>>::put(hash);
 			<ImportedHeaders<T, I>>::insert(hash, finality_target);
+			<ImportedHashes<T, I>>::insert(index, hash);
 			<RequestCount<T, I>>::mutate(|count| *count += 1);
+
+			// Update ring buffer pointer and remove old header.
+			<ImportedHashesPointer<T, I>>::put((index + 1) % T::HeadersToKeep::get());
+			if let Ok(hash) = pruning {
+				log::debug!(target: "runtime::bridge-grandpa", "Pruning old header: {:?}.", hash);
+				<ImportedHeaders<T, I>>::remove(hash);
+			}
 
 			log::info!(target: "runtime::bridge-grandpa", "Succesfully imported finalized header with hash {:?}!", hash);
 
@@ -247,6 +262,15 @@ pub mod pallet {
 	/// Hash of the best finalized header.
 	#[pallet::storage]
 	pub(super) type BestFinalized<T: Config<I>, I: 'static = ()> = StorageValue<_, BridgedBlockHash<T, I>, ValueQuery>;
+
+	/// A ring buffer of imported hashes. Ordered by the insertion time.
+	#[pallet::storage]
+	pub(super) type ImportedHashes<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Identity, u32, BridgedBlockHash<T, I>>;
+
+	/// Current ring buffer position.
+	#[pallet::storage]
+	pub(super) type ImportedHashesPointer<T: Config<I>, I: 'static = ()> = StorageValue<_, u32, ValueQuery>;
 
 	/// Headers which have been imported into the pallet.
 	#[pallet::storage]
@@ -482,22 +506,6 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 
 		Ok(parse(storage_proof_checker))
 	}
-}
-
-/// Data required for initializing the bridge pallet.
-///
-/// The bridge needs to know where to start its sync from, and this provides that initial context.
-#[derive(Default, Encode, Decode, RuntimeDebug, PartialEq, Clone)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct InitializationData<H: HeaderT> {
-	/// The header from which we should start syncing.
-	pub header: H,
-	/// The initial authorities of the pallet.
-	pub authority_list: sp_finality_grandpa::AuthorityList,
-	/// The ID of the initial authority set.
-	pub set_id: sp_finality_grandpa::SetId,
-	/// Should the pallet block transaction immediately after initialization.
-	pub is_halted: bool,
 }
 
 pub(crate) fn find_scheduled_change<H: HeaderT>(header: &H) -> Option<sp_finality_grandpa::ScheduledChange<H::Number>> {
@@ -997,6 +1005,32 @@ mod tests {
 			next_block();
 			assert_ok!(submit_finality_proof(5));
 			assert_ok!(submit_finality_proof(7));
+		})
+	}
+
+	#[test]
+	fn should_prune_headers_over_headers_to_keep_parameter() {
+		run_test(|| {
+			initialize_substrate_bridge();
+			assert_ok!(submit_finality_proof(1));
+			let first_header = Pallet::<TestRuntime>::best_finalized();
+			next_block();
+
+			assert_ok!(submit_finality_proof(2));
+			next_block();
+			assert_ok!(submit_finality_proof(3));
+			next_block();
+			assert_ok!(submit_finality_proof(4));
+			next_block();
+			assert_ok!(submit_finality_proof(5));
+			next_block();
+
+			assert_ok!(submit_finality_proof(6));
+
+			assert!(
+				!Pallet::<TestRuntime>::is_known_header(first_header.hash()),
+				"First header should be pruned."
+			);
 		})
 	}
 }

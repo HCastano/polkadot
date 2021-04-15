@@ -14,38 +14,43 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Rialto-to-Millau headers sync entrypoint.
+//! Westend-to-Millau headers sync entrypoint.
 
 use crate::finality_pipeline::{SubstrateFinalitySyncPipeline, SubstrateFinalityToSubstrate};
 
 use bp_header_chain::justification::GrandpaJustification;
 use codec::Encode;
 use relay_millau_client::{Millau, SigningParams as MillauSigningParams};
-use relay_rialto_client::{Rialto, SyncHeader as RialtoSyncHeader};
 use relay_substrate_client::{Chain, TransactionSignScheme};
+use relay_utils::metrics::MetricsParams;
+use relay_westend_client::{SyncHeader as WestendSyncHeader, Westend};
 use sp_core::{Bytes, Pair};
 
-/// Rialto-to-Millau finality sync pipeline.
-pub(crate) type RialtoFinalityToMillau = SubstrateFinalityToSubstrate<Rialto, Millau, MillauSigningParams>;
+/// Westend-to-Millau finality sync pipeline.
+pub(crate) type WestendFinalityToMillau = SubstrateFinalityToSubstrate<Westend, Millau, MillauSigningParams>;
 
-impl SubstrateFinalitySyncPipeline for RialtoFinalityToMillau {
-	const BEST_FINALIZED_SOURCE_HEADER_ID_AT_TARGET: &'static str = bp_rialto::BEST_FINALIZED_RIALTO_HEADER_METHOD;
+impl SubstrateFinalitySyncPipeline for WestendFinalityToMillau {
+	const BEST_FINALIZED_SOURCE_HEADER_ID_AT_TARGET: &'static str = bp_westend::BEST_FINALIZED_WESTEND_HEADER_METHOD;
 
 	type TargetChain = Millau;
 
+	fn customize_metrics(params: MetricsParams) -> anyhow::Result<MetricsParams> {
+		crate::chains::add_polkadot_kusama_price_metrics::<Self>(params)
+	}
+
 	fn transactions_author(&self) -> bp_millau::AccountId {
-		self.target_sign.public().as_array_ref().clone().into()
+		(*self.target_sign.public().as_array_ref()).into()
 	}
 
 	fn make_submit_finality_proof_transaction(
 		&self,
 		transaction_nonce: <Millau as Chain>::Index,
-		header: RialtoSyncHeader,
-		proof: GrandpaJustification<bp_rialto::Header>,
+		header: WestendSyncHeader,
+		proof: GrandpaJustification<bp_westend::Header>,
 	) -> Bytes {
-		let call = millau_runtime::BridgeGrandpaRialtoCall::<
+		let call = millau_runtime::BridgeGrandpaWestendCall::<
 			millau_runtime::Runtime,
-			millau_runtime::RialtoGrandpaInstance,
+			millau_runtime::WestendGrandpaInstance,
 		>::submit_finality_proof(header.into_inner(), proof)
 		.into();
 

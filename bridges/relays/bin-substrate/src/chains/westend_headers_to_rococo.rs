@@ -22,7 +22,7 @@ use bp_header_chain::justification::GrandpaJustification;
 use codec::Encode;
 use relay_rococo_client::{Rococo, SigningParams as RococoSigningParams};
 use relay_substrate_client::{Chain, TransactionSignScheme};
-use relay_utils::metrics::{FloatJsonValueMetric, MetricsParams};
+use relay_utils::metrics::MetricsParams;
 use relay_westend_client::{SyncHeader as WestendSyncHeader, Westend};
 use sp_core::{Bytes, Pair};
 
@@ -35,30 +35,11 @@ impl SubstrateFinalitySyncPipeline for WestendFinalityToRococo {
 	type TargetChain = Rococo;
 
 	fn customize_metrics(params: MetricsParams) -> anyhow::Result<MetricsParams> {
-		Ok(
-			relay_utils::relay_metrics(finality_relay::metrics_prefix::<Self>(), params.address)
-				// Polkadot/Kusama prices are added as metrics here, because atm we don't have Polkadot <-> Kusama
-				// relays, but we want to test metrics/dashboards in advance
-				.standalone_metric(FloatJsonValueMetric::new(
-					"https://api.coingecko.com/api/v3/simple/price?ids=Polkadot&vs_currencies=usd".into(),
-					"$.polkadot.usd".into(),
-					"polkadot_price".into(),
-					"Polkadot price in USD".into(),
-				))
-				.map_err(|e| anyhow::format_err!("{}", e))?
-				.standalone_metric(FloatJsonValueMetric::new(
-					"https://api.coingecko.com/api/v3/simple/price?ids=Kusama&vs_currencies=usd".into(),
-					"$.kusama.usd".into(),
-					"kusama_price".into(),
-					"Kusama price in USD".into(),
-				))
-				.map_err(|e| anyhow::format_err!("{}", e))?
-				.into_params(),
-		)
+		crate::chains::add_polkadot_kusama_price_metrics::<Self>(params)
 	}
 
 	fn transactions_author(&self) -> bp_rococo::AccountId {
-		self.target_sign.public().as_array_ref().clone().into()
+		(*self.target_sign.public().as_array_ref()).into()
 	}
 
 	fn make_submit_finality_proof_transaction(
@@ -67,14 +48,10 @@ impl SubstrateFinalitySyncPipeline for WestendFinalityToRococo {
 		header: WestendSyncHeader,
 		proof: GrandpaJustification<bp_westend::Header>,
 	) -> Bytes {
-		// let call =
-		// 	rococo_runtime::BridgeGrandpaWestendCall::<
-		// 	rococo_runtime::Runtime,
-		// 	rococo_runtime::WestendGrandpaInstance,
-		// >::submit_finality_proof(header.into_inner(), proof)
-		// .into();
-
-		let call = bp_rococo::Call::submit_finality_proof(header.into_inner(), proof);
+		let call = bp_rococo::Call::BridgeGrandpaWestend(bp_rococo::BridgeGrandpaWestendCall::submit_finality_proof(
+			header.into_inner(),
+			proof,
+		));
 		let genesis_hash = *self.target_client.genesis_hash();
 		let transaction = Rococo::sign_transaction(genesis_hash, &self.target_sign, transaction_nonce, call);
 

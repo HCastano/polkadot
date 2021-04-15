@@ -15,9 +15,9 @@
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::cli::{SourceConnectionParams, TargetConnectionParams, TargetSigningParams};
+use bp_header_chain::InitializationData;
 use bp_runtime::Chain as ChainBase;
 use codec::Encode;
-use pallet_bridge_grandpa::InitializationData;
 use relay_substrate_client::{Chain, TransactionSignScheme};
 use sp_core::{Bytes, Pair};
 use structopt::{clap::arg_enum, StructOpt};
@@ -109,14 +109,7 @@ macro_rules! select_bridge {
 				fn encode_init_bridge(
 					init_data: InitializationData<<Source as ChainBase>::Header>,
 				) -> <Target as Chain>::Call {
-					// TODO: Maybe more closely match "real" Call
-					// bp_rococo::Call::initialize
-
-					rococo_runtime::BridgeGrandpaWestendCall::<
-						rococo_runtime::Runtime,
-						rococo_runtime::WestendGrandpaInstance,
-					>::initialize(init_data)
-					.into()
+					bp_rococo::Call::BridgeGrandpaWestend(bp_rococo::BridgeGrandpaWestendCall::initialize(init_data))
 				}
 
 				$generic
@@ -128,14 +121,7 @@ macro_rules! select_bridge {
 				fn encode_init_bridge(
 					init_data: InitializationData<<Source as ChainBase>::Header>,
 				) -> <Target as Chain>::Call {
-					// TODO: Maybe more closely match "real" Call
-					// bp_westend::Call::initialize
-
-					westend_runtime::BridgeGrandpaRococoCall::<
-						westned_runtime::Runtime,
-						westned_runtime::RococoGrandpaInstance,
-					>::initialize(init_data)
-					.into()
+					bp_westend::Call::BridgeGrandpaRococo(bp_westend::BridgeGrandpaRococoCall::initialize(init_data))
 				}
 
 				$generic
@@ -148,9 +134,9 @@ impl InitBridge {
 	/// Run the command.
 	pub async fn run(self) -> anyhow::Result<()> {
 		select_bridge!(self.bridge, {
-			let source_client = self.source.into_client::<Source>().await?;
-			let target_client = self.target.into_client::<Target>().await?;
-			let target_sign = self.target_sign.into_keypair::<Target>()?;
+			let source_client = self.source.to_client::<Source>().await?;
+			let target_client = self.target.to_client::<Target>().await?;
+			let target_sign = self.target_sign.to_keypair::<Target>()?;
 
 			crate::headers_initialize::initialize(
 				source_client,
