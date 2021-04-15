@@ -295,7 +295,7 @@ construct_runtime! {
 		Mmr: pallet_mmr::{Pallet, Call, Storage},
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage},
 		MmrLeaf: mmr_common::{Pallet, Storage},
-		BridgeWestendGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage} = 35,
+		BridgeWestendGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage, Config<T>} = 35,
 
 		// Validator Manager pallet.
 		ValidatorManager: validator_manager::{Pallet, Call, Storage, Event<T>},

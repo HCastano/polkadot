@@ -1375,6 +1375,10 @@ pub fn westend_testnet_genesis(
 		pallet_authority_discovery: westend::AuthorityDiscoveryConfig { keys: vec![] },
 		pallet_vesting: westend::VestingConfig { vesting: vec![] },
 		pallet_sudo: westend::SudoConfig { key: root_key },
+		pallet_bridge_grandpa: westend::BridgeRococoGrandpaConfig {
+			owner: Some(get_account_id_from_seed::<sr25519::Public>("Eve")),
+			..Default::default()
+		},
 	}
 }
 
@@ -1478,6 +1482,10 @@ pub fn rococo_testnet_genesis(
 				..Default::default()
 			},
 		},
+		pallet_bridge_grandpa: rococo_runtime::BridgeWestendGrandpaConfig {
+			owner: Some(get_account_id_from_seed::<sr25519::Public>("Dave")),
+			..Default::default()
+		},
 	}
 }
 
@@ -1501,6 +1509,15 @@ fn kusama_development_config_genesis(wasm_binary: &[u8]) -> kusama::GenesisConfi
 
 fn westend_development_config_genesis(wasm_binary: &[u8]) -> westend::GenesisConfig {
 	westend_testnet_genesis(
+		wasm_binary,
+		vec![get_authority_keys_from_seed("Alice")],
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		None,
+	)
+}
+
+fn rococo_development_config_genesis(wasm_binary: &[u8]) -> rococo::GenesisConfig {
+	rococo_testnet_genesis(
 		wasm_binary,
 		vec![get_authority_keys_from_seed("Alice")],
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -1551,6 +1568,27 @@ pub fn westend_development_config() -> Result<WestendChainSpec, String> {
 		"westend_dev",
 		ChainType::Development,
 		move || westend_development_config_genesis(wasm_binary),
+		vec![],
+		None,
+		Some(DEFAULT_PROTOCOL_ID),
+		None,
+		Default::default(),
+	))
+}
+
+/// Rococo development config (single validator Alice)
+pub fn rococo_development_config() -> Result<RococoChainSpec, String> {
+	let wasm_binary = rococo::WASM_BINARY.ok_or("Rococo development wasm not available")?;
+
+	Ok(RococoChainSpec::from_genesis(
+		"Development",
+		"rococo_dev",
+		ChainType::Development,
+		move || RococoGenesisExt {
+			runtime_genesis_config: rococo_development_config_genesis(wasm_binary),
+			// Use 1 minute session length.
+			session_length_in_blocks: Some(10),
+		},
 		vec![],
 		None,
 		Some(DEFAULT_PROTOCOL_ID),

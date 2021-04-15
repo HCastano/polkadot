@@ -832,7 +832,7 @@ construct_runtime! {
 		Mmr: pallet_mmr::{Pallet, Call, Storage} = 28,
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage} = 29,
 		MmrLeaf: mmr_common::{Pallet, Storage} = 30,
-		BridgeRococoGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage} = 31,
+		BridgeRococoGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage, Config<T>} = 31,
 	}
 }
 
