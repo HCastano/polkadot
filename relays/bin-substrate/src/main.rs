@@ -20,6 +20,7 @@
 
 use relay_utils::initialize::initialize_logger;
 
+mod chains;
 mod cli;
 mod finality_pipeline;
 mod finality_target;
@@ -27,8 +28,7 @@ mod headers_initialize;
 mod messages_lane;
 mod messages_source;
 mod messages_target;
-
-mod rialto_millau;
+mod on_demand_headers;
 
 fn main() {
 	initialize_logger(false);
