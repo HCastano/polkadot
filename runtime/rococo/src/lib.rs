@@ -224,12 +224,19 @@ parameter_types! {
 	// Note that once this is hit the pallet will essentially throttle incoming requests down to one
 	// call per block.
 	pub const MaxRequests: u32 = 50;
+
+	// Number of headers to keep.
+	//
+	// Assuming the worst case of every header being finalized, we will keep headers at least for a
+	// week.
+	pub const HeadersToKeep: u32 = 7 * DAYS as u32;
 }
 
 pub type WestendGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
 	type BridgedChain = bp_westend::Westend;
 	type MaxRequests = MaxRequests;
+	type HeadersToKeep = HeadersToKeep;
 
 	// TODO [#391]: Use weights generated for the Rococo runtime instead of Rialto ones.
 	type WeightInfo = pallet_bridge_grandpa::weights::RialtoWeight<Runtime>;
@@ -288,7 +295,7 @@ construct_runtime! {
 		Mmr: pallet_mmr::{Pallet, Call, Storage},
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage},
 		MmrLeaf: mmr_common::{Pallet, Storage},
-		BridgeWestendGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage},
+		BridgeWestendGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage} = 35,
 
 		// Validator Manager pallet.
 		ValidatorManager: validator_manager::{Pallet, Call, Storage, Event<T>},
