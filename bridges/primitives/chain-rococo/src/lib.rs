@@ -36,10 +36,10 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: sp_version::create_runtime_str!("rococo"),
 	impl_name: sp_version::create_runtime_str!("parity-rococo-v1-1"),
 	authoring_version: 0,
-	spec_version: 30,
+	spec_version: 227,
 	impl_version: 0,
 	apis: sp_version::create_apis_vec![[]],
-	transaction_version: 6,
+	transaction_version: 0,
 };
 
 /// Rococo Runtime `Call` enum.
@@ -55,7 +55,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 #[derive(parity_scale_codec::Encode, parity_scale_codec::Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
 	/// Westend bridge pallet.
-	#[codec(index = 40)]
+	#[codec(index = 35)]
 	BridgeGrandpaWestend(BridgeGrandpaWestendCall),
 }
 

@@ -56,7 +56,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 #[derive(parity_scale_codec::Encode, parity_scale_codec::Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
 	/// Rococo bridge pallet.
-	#[codec(index = 40)]
+	#[codec(index = 31)]
 	BridgeGrandpaRococo(BridgeGrandpaRococoCall),
 }
 

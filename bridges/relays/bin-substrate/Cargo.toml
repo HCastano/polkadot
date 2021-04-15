@@ -47,9 +47,6 @@ relay-utils = { path = "../utils" }
 relay-westend-client = { path = "../client-westend" }
 rialto-runtime = { path = "../../bin/rialto/runtime" }
 
-westend-runtime = { path = "../../../runtime/westend" }
-rococo-runtime = { path = "../../../runtime/rococo" }
-
 # Substrate Dependencies
 
 frame-support = { git = "https://github.com/paritytech/substrate", branch = "master" }
