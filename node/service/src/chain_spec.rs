@@ -458,6 +458,10 @@ fn westend_staging_testnet_config_genesis(wasm_binary: &[u8]) -> westend::Genesi
 		pallet_sudo: westend::SudoConfig {
 			key: endowed_accounts[0].clone(),
 		},
+		pallet_bridge_grandpa: westend::BridgeRococoGrandpaConfig {
+			owner: Some(get_account_id_from_seed::<sr25519::Public>("Eve")),
+			..Default::default()
+		},
 	}
 }
 
@@ -935,6 +939,10 @@ fn rococo_staging_testnet_config_genesis(wasm_binary: &[u8]) -> rococo_runtime::
 				zeroth_delay_tranche_width: 0,
 				..Default::default()
 			},
+		},
+		pallet_bridge_grandpa: rococo_runtime::BridgeWestendGrandpaConfig {
+			owner: Some(get_account_id_from_seed::<sr25519::Public>("Dave")),
+			..Default::default()
 		},
 	}
 }
