@@ -1191,6 +1191,17 @@ sp_api::impl_runtime_apis! {
 		}
 	}
 
+	impl bp_westend::WestendFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (bp_westend::BlockNumber, bp_westend::Hash) {
+			let header = BridgeWestendGrandpa::best_finalized();
+			(header.number, header.hash())
+		}
+
+		fn is_known_header(hash: bp_westend::Hash) -> bool {
+			BridgeWestendGrandpa::is_known_header(hash)
+		}
+	}
+
 	impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce> for Runtime {
 		fn account_nonce(account: AccountId) -> Nonce {
 			System::account_nonce(account)
