@@ -42,10 +42,10 @@ pub(crate) fn add_polkadot_kusama_price_metrics<T: finality_relay::FinalitySyncP
 				FloatJsonValueMetric::new(
 					registry,
 					prefix,
-					"https://api.coingecko.com/api/v3/simple/price?ids=Polkadot&vs_currencies=usd".into(),
-					"$.polkadot.usd".into(),
-					"polkadot_price".into(),
-					"Polkadot price in USD".into(),
+					"https://api.coingecko.com/api/v3/simple/price?ids=Polkadot&vs_currencies=btc".into(),
+					"$.polkadot.btc".into(),
+					"polkadot_to_base_conversion_rate".into(),
+					"Rate used to convert from DOT to some BASE tokens".into(),
 				)
 			})
 			.map_err(|e| anyhow::format_err!("{}", e))?
@@ -53,10 +53,10 @@ pub(crate) fn add_polkadot_kusama_price_metrics<T: finality_relay::FinalitySyncP
 				FloatJsonValueMetric::new(
 					registry,
 					prefix,
-					"https://api.coingecko.com/api/v3/simple/price?ids=Kusama&vs_currencies=usd".into(),
-					"$.kusama.usd".into(),
-					"kusama_price".into(),
-					"Kusama price in USD".into(),
+					"https://api.coingecko.com/api/v3/simple/price?ids=Kusama&vs_currencies=btc".into(),
+					"$.kusama.btc".into(),
+					"kusama_to_base_conversion_rate".into(),
+					"Rate used to convert from KSM to some BASE tokens".into(),
 				)
 			})
 			.map_err(|e| anyhow::format_err!("{}", e))?
@@ -259,6 +259,7 @@ mod rococo_tests {
 			extrinsics_root: Default::default(),
 			digest: sp_runtime::generic::Digest { logs: vec![] },
 		};
+
 		let justification = GrandpaJustification {
 			round: 0,
 			commit: finality_grandpa::Commit {
@@ -268,6 +269,7 @@ mod rococo_tests {
 			},
 			votes_ancestries: vec![],
 		};
+
 		let actual = bp_rococo::BridgeGrandpaWestendCall::submit_finality_proof(header.clone(), justification.clone());
 		let expected = millau_runtime::BridgeGrandpaRialtoCall::<millau_runtime::Runtime>::submit_finality_proof(
 			header,
@@ -281,7 +283,7 @@ mod rococo_tests {
 		// then
 		assert_eq!(
 			actual_encoded, expected_encoded,
-			"Encoding difference. Raw: {:?} vs {:?}",
+			"\n\nEncoding difference.\nGot {:#?} \nExpected: {:#?}",
 			actual, expected
 		);
 	}
@@ -302,6 +304,7 @@ mod westend_tests {
 			extrinsics_root: Default::default(),
 			digest: sp_runtime::generic::Digest { logs: vec![] },
 		};
+
 		let justification = GrandpaJustification {
 			round: 0,
 			commit: finality_grandpa::Commit {
@@ -311,6 +314,7 @@ mod westend_tests {
 			},
 			votes_ancestries: vec![],
 		};
+
 		let actual = bp_westend::BridgeGrandpaRococoCall::submit_finality_proof(header.clone(), justification.clone());
 		let expected = millau_runtime::BridgeGrandpaRialtoCall::<millau_runtime::Runtime>::submit_finality_proof(
 			header,
@@ -324,7 +328,7 @@ mod westend_tests {
 		// then
 		assert_eq!(
 			actual_encoded, expected_encoded,
-			"Encoding difference. Raw: {:?} vs {:?}",
+			"\n\nEncoding difference.\nGot {:#?} \nExpected: {:#?}",
 			actual, expected
 		);
 	}
